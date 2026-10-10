@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.PositionMapper">
+
+    <resultMap id="PositionResultMap" type="com.company.enterprise.entity.Position">
+        <id column="id" property="id"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="position_code" property="positionCode"/>
+        <result column="position_name" property="positionName"/>
+        <result column="position_level" property="positionLevel"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id, dept_id, position_code, position_name, position_level, sort_order, status, remark,
+        create_time, update_time, is_deleted
+    </sql>
+
+    <sql id="PositionWhere">
+        FROM t_position
+        WHERE is_deleted = 0
+        <if test="query != null and query.deptId != null">
+            AND dept_id = #{query.deptId}
+        </if>
+        <if test="query != null and query.positionName != null and query.positionName != ''">
+            AND position_name LIKE CONCAT('%', #{query.positionName}, '%')
+        </if>
+        <if test="query != null and query.status != null">
+            AND status = #{query.status}
+        </if>
+    </sql>
+
+    <select id="selectPositionPage" resultMap="PositionResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        <include refid="PositionWhere"/>
+        ORDER BY sort_order ASC, id ASC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countPositionPage" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        <include refid="PositionWhere"/>
+    </select>
+
+    <select id="selectPositionList" resultMap="PositionResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_position
+        WHERE is_deleted = 0
+        <if test="deptId != null">
+            AND (dept_id = #{deptId} OR dept_id IS NULL)
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectPositionById" resultMap="PositionResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_position
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </select>
+
+    <select id="countByPositionCode" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_position
+        WHERE position_code = #{positionCode}
+          AND is_deleted = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="countEmployeeByPositionId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_employee
+        WHERE position_id = #{positionId}
+          AND is_deleted = 0
+    </select>
+
+    <insert id="insertPosition" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_position (
+            dept_id, position_code, position_name, position_level, sort_order, status, remark,
+            create_time, update_time, is_deleted
+        ) VALUES (
+            #{deptId}, #{positionCode}, #{positionName}, #{positionLevel}, #{sortOrder}, #{status}, #{remark},
+            NOW(), NOW(), 0
+        )
+    </insert>
+
+    <update id="updatePosition">
+        UPDATE t_position
+        SET dept_id = #{deptId},
+            position_code = #{positionCode},
+            position_name = #{positionName},
+            position_level = #{positionLevel},
+            sort_order = #{sortOrder},
+            status = #{status},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="logicDeletePositionById">
+        UPDATE t_position
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+</mapper>

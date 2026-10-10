@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.NoticeMapper">
+
+    <resultMap id="NoticeResultMap" type="com.company.enterprise.entity.Notice">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="notice_type" property="noticeType"/>
+        <result column="publish_status" property="publishStatus"/>
+        <result column="publisher_id" property="publisherId"/>
+        <result column="publish_time" property="publishTime"/>
+        <result column="top_flag" property="topFlag"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id, title, content, notice_type, publish_status, publisher_id, publish_time,
+        top_flag, create_time, update_time, is_deleted
+    </sql>
+
+    <sql id="NoticeWhere">
+        FROM t_notice
+        WHERE is_deleted = 0
+        <if test="query != null and query.title != null and query.title != ''">
+            AND title LIKE CONCAT('%', #{query.title}, '%')
+        </if>
+        <if test="query != null and query.noticeType != null">
+            AND notice_type = #{query.noticeType}
+        </if>
+        <if test="query != null and query.publishStatus != null">
+            AND publish_status = #{query.publishStatus}
+        </if>
+    </sql>
+
+    <select id="selectNoticePage" resultMap="NoticeResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        <include refid="NoticeWhere"/>
+        ORDER BY top_flag DESC, publish_time DESC, create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countNoticePage" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        <include refid="NoticeWhere"/>
+    </select>
+
+    <select id="selectNoticeById" resultMap="NoticeResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_notice
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </select>
+
+    <select id="selectPublishedNotices" resultMap="NoticeResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_notice
+        WHERE is_deleted = 0
+          AND publish_status = 1
+        ORDER BY top_flag DESC, publish_time DESC, create_time DESC
+    </select>
+
+    <insert id="insertNotice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_notice (
+            title, content, notice_type, publish_status, publisher_id, publish_time, top_flag,
+            create_time, update_time, is_deleted
+        ) VALUES (
+            #{title}, #{content}, #{noticeType}, #{publishStatus}, #{publisherId}, #{publishTime}, #{topFlag},
+            NOW(), NOW(), 0
+        )
+    </insert>
+
+    <update id="updateNotice">
+        UPDATE t_notice
+        SET title = #{title},
+            content = #{content},
+            notice_type = #{noticeType},
+            publish_status = #{publishStatus},
+            publisher_id = #{publisherId},
+            publish_time = #{publishTime},
+            top_flag = #{topFlag},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="updatePublishStatus">
+        UPDATE t_notice
+        SET publish_status = #{publishStatus},
+            publisher_id = #{publisherId},
+            publish_time = CASE WHEN #{publishStatus} = 1 THEN NOW() ELSE publish_time END,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="logicDeleteNoticeById">
+        UPDATE t_notice SET is_deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+</mapper>

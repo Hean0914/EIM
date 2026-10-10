@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.AttendanceRecordMapper">
+
+    <resultMap id="AttendanceRecordResultMap" type="com.company.enterprise.entity.AttendanceRecord">
+        <id column="id" property="id"/>
+        <result column="employee_id" property="employeeId"/>
+        <result column="attendance_date" property="attendanceDate"/>
+        <result column="check_in_time" property="checkInTime"/>
+        <result column="check_out_time" property="checkOutTime"/>
+        <result column="check_in_status" property="checkInStatus"/>
+        <result column="check_out_status" property="checkOutStatus"/>
+        <result column="work_minutes" property="workMinutes"/>
+        <result column="check_in_location" property="checkInLocation"/>
+        <result column="check_out_location" property="checkOutLocation"/>
+        <result column="check_in_longitude" property="checkInLongitude"/>
+        <result column="check_in_latitude" property="checkInLatitude"/>
+        <result column="check_in_accuracy" property="checkInAccuracy"/>
+        <result column="check_in_distance" property="checkInDistance"/>
+        <result column="check_in_gps_status" property="checkInGpsStatus"/>
+        <result column="check_out_longitude" property="checkOutLongitude"/>
+        <result column="check_out_latitude" property="checkOutLatitude"/>
+        <result column="check_out_accuracy" property="checkOutAccuracy"/>
+        <result column="check_out_distance" property="checkOutDistance"/>
+        <result column="check_out_gps_status" property="checkOutGpsStatus"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="employee_no" property="employeeNo"/>
+        <result column="employee_name" property="employeeName"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="dept_name" property="deptName"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        a.id, a.employee_id, a.attendance_date, a.check_in_time, a.check_out_time, a.check_in_status,
+        a.check_out_status, a.work_minutes, a.check_in_location, a.check_out_location,
+        a.check_in_longitude, a.check_in_latitude, a.check_in_accuracy, a.check_in_distance, a.check_in_gps_status,
+        a.check_out_longitude, a.check_out_latitude, a.check_out_accuracy, a.check_out_distance, a.check_out_gps_status,
+        a.remark,
+        a.create_time, a.update_time, a.is_deleted,
+        e.employee_no, e.employee_name, e.dept_id, d.dept_name
+    </sql>
+
+    <sql id="AttendanceWhere">
+        FROM t_attendance_record a
+        LEFT JOIN t_employee e ON e.id = a.employee_id AND e.is_deleted = 0
+        LEFT JOIN t_department d ON d.id = e.dept_id AND d.is_deleted = 0
+        WHERE a.is_deleted = 0
+        <if test="query != null and query.employeeId != null">
+            AND a.employee_id = #{query.employeeId}
+        </if>
+        <if test="query != null and query.startDate != null">
+            AND a.attendance_date &gt;= #{query.startDate}
+        </if>
+        <if test="query != null and query.endDate != null">
+            AND a.attendance_date &lt;= #{query.endDate}
+        </if>
+    </sql>
+
+    <select id="selectByEmployeeAndDate" resultMap="AttendanceRecordResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_attendance_record a
+        LEFT JOIN t_employee e ON e.id = a.employee_id AND e.is_deleted = 0
+        LEFT JOIN t_department d ON d.id = e.dept_id AND d.is_deleted = 0
+        WHERE a.employee_id = #{employeeId}
+          AND a.attendance_date = #{attendanceDate}
+          AND a.is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectAttendancePage" resultMap="AttendanceRecordResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        <include refid="AttendanceWhere"/>
+        ORDER BY a.attendance_date DESC, a.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="selectAttendanceRange" resultMap="AttendanceRecordResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        <include refid="AttendanceWhere"/>
+        ORDER BY a.attendance_date ASC, a.id ASC
+    </select>
+
+    <select id="countAttendancePage" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        <include refid="AttendanceWhere"/>
+    </select>
+
+    <insert id="insertAttendanceRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_attendance_record (
+            employee_id, attendance_date, check_in_time, check_out_time, check_in_status,
+            check_out_status, work_minutes, check_in_location, check_out_location,
+            check_in_longitude, check_in_latitude, check_in_accuracy, check_in_distance, check_in_gps_status,
+            check_out_longitude, check_out_latitude, check_out_accuracy, check_out_distance, check_out_gps_status,
+            remark, create_time, update_time, is_deleted
+        ) VALUES (
+            #{employeeId}, #{attendanceDate}, #{checkInTime}, #{checkOutTime}, #{checkInStatus},
+            #{checkOutStatus}, #{workMinutes}, #{checkInLocation}, #{checkOutLocation},
+            #{checkInLongitude}, #{checkInLatitude}, #{checkInAccuracy}, #{checkInDistance}, #{checkInGpsStatus},
+            #{checkOutLongitude}, #{checkOutLatitude}, #{checkOutAccuracy}, #{checkOutDistance}, #{checkOutGpsStatus},
+            #{remark}, NOW(), NOW(), 0
+        )
+    </insert>
+
+    <update id="updateAttendanceRecord">
+        UPDATE t_attendance_record
+        SET check_in_time = #{checkInTime},
+            check_out_time = #{checkOutTime},
+            check_in_status = #{checkInStatus},
+            check_out_status = #{checkOutStatus},
+            work_minutes = #{workMinutes},
+            check_in_location = #{checkInLocation},
+            check_out_location = #{checkOutLocation},
+            check_in_longitude = #{checkInLongitude},
+            check_in_latitude = #{checkInLatitude},
+            check_in_accuracy = #{checkInAccuracy},
+            check_in_distance = #{checkInDistance},
+            check_in_gps_status = #{checkInGpsStatus},
+            check_out_longitude = #{checkOutLongitude},
+            check_out_latitude = #{checkOutLatitude},
+            check_out_accuracy = #{checkOutAccuracy},
+            check_out_distance = #{checkOutDistance},
+            check_out_gps_status = #{checkOutGpsStatus},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+</mapper>

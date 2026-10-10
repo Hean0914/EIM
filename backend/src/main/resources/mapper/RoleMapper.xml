@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.RoleMapper">
+
+    <resultMap id="RoleResultMap" type="com.company.enterprise.entity.Role">
+        <id column="id" property="id"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="role_name" property="roleName"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectPositionRoleBindings" resultType="com.company.enterprise.vo.PositionRoleBindingVO">
+        SELECT p.id AS position_id,
+               p.position_code,
+               p.position_name,
+               p.dept_id,
+               r.id AS role_id,
+               r.role_code,
+               r.role_name
+        FROM t_position p
+        LEFT JOIN t_role r ON r.role_code = CASE p.position_code
+            WHEN 'GENERAL_MANAGER' THEN 'GENERAL_MANAGER'
+            WHEN 'HR_MANAGER' THEN 'HR_MANAGER'
+            WHEN 'DEVELOPER' THEN 'RND_ENGINEER'
+            WHEN 'SALES' THEN 'SALES_SPECIALIST'
+            WHEN 'ACCOUNTANT' THEN 'ACCOUNTANT'
+        END
+            AND r.status = 1
+            AND r.is_deleted = 0
+        WHERE p.status = 1
+          AND p.is_deleted = 0
+        ORDER BY p.sort_order ASC, p.id ASC
+    </select>
+
+    <select id="selectEnabledRoles" resultMap="RoleResultMap">
+        SELECT id, role_code, role_name, status, remark, create_time, update_time, is_deleted
+        FROM t_role
+        WHERE status = 1
+          AND is_deleted = 0
+        ORDER BY id ASC
+    </select>
+</mapper>

@@ -1,0 +1,22 @@
+# Build and dependency output
+**/node_modules/
+**/target/
+**/dist/
+.npm-cache/
+
+# IDE and local tooling
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+**/application-local.yml
+**/application-local.yaml
+*.pem
+*.key
+*.p12
+*.jks

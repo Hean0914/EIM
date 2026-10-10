@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.AuditLogMapper">
+
+    <resultMap id="AuditLogResultMap" type="com.company.enterprise.entity.AuditLog">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="real_name" property="realName"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="module" property="module"/>
+        <result column="action" property="action"/>
+        <result column="target_type" property="targetType"/>
+        <result column="target_id" property="targetId"/>
+        <result column="request_method" property="requestMethod"/>
+        <result column="request_path" property="requestPath"/>
+        <result column="operation_status" property="operationStatus"/>
+        <result column="detail" property="detail"/>
+        <result column="client_ip" property="clientIp"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id, user_id, username, real_name, role_code, module, action, target_type, target_id,
+        request_method, request_path, operation_status, detail, client_ip, user_agent,
+        create_time, update_time, is_deleted
+    </sql>
+
+    <sql id="AuditWhere">
+        FROM t_audit_log
+        WHERE is_deleted = 0
+        <if test="query != null and query.module != null and query.module != ''">
+            AND module = #{query.module}
+        </if>
+        <if test="query != null and query.action != null and query.action != ''">
+            AND action = #{query.action}
+        </if>
+        <if test="query != null and query.operationStatus != null">
+            AND operation_status = #{query.operationStatus}
+        </if>
+        <if test="query != null and query.startTime != null">
+            AND create_time &gt;= #{query.startTime}
+        </if>
+        <if test="query != null and query.endTime != null">
+            AND create_time &lt;= #{query.endTime}
+        </if>
+    </sql>
+
+    <select id="selectPage" resultMap="AuditLogResultMap">
+        SELECT <include refid="BaseColumnList"/>
+        <include refid="AuditWhere"/>
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countPage" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        <include refid="AuditWhere"/>
+    </select>
+
+    <select id="countByStatus" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        <include refid="AuditWhere"/>
+        AND operation_status = #{operationStatus}
+    </select>
+
+    <insert id="insertAuditLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_audit_log (
+            user_id, username, real_name, role_code, module, action, target_type, target_id,
+            request_method, request_path, operation_status, detail, client_ip, user_agent,
+            create_time, update_time, is_deleted
+        ) VALUES (
+            #{userId}, #{username}, #{realName}, #{roleCode}, #{module}, #{action}, #{targetType}, #{targetId},
+            #{requestMethod}, #{requestPath}, #{operationStatus}, #{detail}, #{clientIp}, #{userAgent},
+            NOW(), NOW(), 0
+        )
+    </insert>
+</mapper>

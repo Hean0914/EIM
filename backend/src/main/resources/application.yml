@@ -1,0 +1,65 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      init:
+        pull-model-strategy: never
+      chat:
+        options:
+          model: qwen2.5:1.5b
+          temperature: 0.2
+          num-predict: 256
+          num-ctx: 8192
+          keep-alive: 30m
+  application:
+    name: enterprise-information-management
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:enterprise_information}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      # 单文件上限需与 ImageFileValidator.MAX_IMAGE_SIZE_BYTES 保持一致；请求上限额外预留 multipart 边界开销
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.company.enterprise.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: ${JWT_SECRET}
+  expire-hours: ${JWT_EXPIRE_HOURS:24}
+
+#阿里云oss配置信息
+aliyun:
+  oss:
+    endpoint: ${OSS_ENDPOINT:https://oss-cn-beijing.aliyuncs.com}
+    bucketName: ${OSS_BUCKET_NAME:}
+    region: ${OSS_REGION:cn-beijing}
+
+ai:
+  web-search:
+    enabled: ${AI_WEB_SEARCH_ENABLED:false}
+    base-url: ${AI_WEB_SEARCH_BASE_URL:http://localhost:8081}
+    timeout-ms: ${AI_WEB_SEARCH_TIMEOUT_MS:8000}
+    max-results: ${AI_WEB_SEARCH_MAX_RESULTS:5}
+    max-snippet-length: ${AI_WEB_SEARCH_MAX_SNIPPET_LENGTH:800}

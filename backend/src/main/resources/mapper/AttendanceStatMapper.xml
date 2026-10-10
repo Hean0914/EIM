@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.AttendanceStatMapper">
+
+    <resultMap id="AttendanceStatResultMap" type="com.company.enterprise.entity.AttendanceStat">
+        <id column="id" property="id"/>
+        <result column="employee_id" property="employeeId"/>
+        <result column="stat_month" property="statMonth"/>
+        <result column="should_work_days" property="shouldWorkDays"/>
+        <result column="actual_work_days" property="actualWorkDays"/>
+        <result column="late_count" property="lateCount"/>
+        <result column="early_leave_count" property="earlyLeaveCount"/>
+        <result column="absence_count" property="absenceCount"/>
+        <result column="leave_days" property="leaveDays"/>
+        <result column="out_days" property="outDays"/>
+        <result column="overtime_hours" property="overtimeHours"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectStatList" resultMap="AttendanceStatResultMap">
+        SELECT id, employee_id, stat_month, should_work_days, actual_work_days, late_count,
+               early_leave_count, absence_count, leave_days, out_days, overtime_hours,
+               create_time, update_time, is_deleted
+        FROM t_attendance_stat
+        WHERE is_deleted = 0
+        <if test="query != null and query.employeeId != null">
+            AND employee_id = #{query.employeeId}
+        </if>
+        <if test="query != null and query.statMonth != null and query.statMonth != ''">
+            AND stat_month = #{query.statMonth}
+        </if>
+        ORDER BY stat_month DESC, employee_id ASC
+    </select>
+</mapper>

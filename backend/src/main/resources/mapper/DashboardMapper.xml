@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.DashboardMapper">
+
+    <select id="countEmployees" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_employee
+        WHERE is_deleted = 0
+    </select>
+
+    <select id="countActiveEmployees" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_employee
+        WHERE is_deleted = 0
+          AND employment_status IN (1, 2)
+    </select>
+
+    <select id="countDepartments" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_department
+        WHERE is_deleted = 0
+          AND status = 1
+    </select>
+
+    <select id="countTodayAttendance" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_attendance_record
+        WHERE is_deleted = 0
+          AND attendance_date = CURDATE()
+    </select>
+
+    <select id="countPendingApprovals" resultType="java.lang.Long">
+        SELECT
+            (SELECT COUNT(1) FROM t_leave_application WHERE is_deleted = 0 AND status = 0)
+            +
+            (SELECT COUNT(1) FROM t_out_application WHERE is_deleted = 0 AND status = 0)
+    </select>
+
+    <select id="countPendingLeave" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_leave_application
+        WHERE is_deleted = 0
+          AND status = 0
+    </select>
+
+    <select id="countPendingOut" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_out_application
+        WHERE is_deleted = 0
+          AND status = 0
+    </select>
+
+    <select id="countInProgressPlans" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_plan
+        WHERE is_deleted = 0
+          AND status = 1
+    </select>
+
+    <select id="countTodayAttendanceAnomalies" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_attendance_record
+        WHERE is_deleted = 0
+          AND attendance_date = CURDATE()
+          AND (
+              check_in_time IS NULL
+              OR check_out_time IS NULL
+              OR check_in_status = 2
+              OR check_out_status = 2
+          )
+    </select>
+
+    <select id="countOverduePlans" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_plan
+        WHERE is_deleted = 0
+          AND status IN (0, 1, 3)
+          AND end_date IS NOT NULL
+          AND end_date &lt; CURDATE()
+    </select>
+
+    <select id="countUpcomingBookings" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_meeting_booking
+        WHERE is_deleted = 0
+          AND status IN (0, 1)
+          AND start_time &gt;= NOW()
+          AND start_time &lt; DATE_ADD(NOW(), INTERVAL 7 DAY)
+    </select>
+
+    <select id="countTodayAttendanceByEmployeeId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_attendance_record
+        WHERE employee_id = #{employeeId}
+          AND attendance_date = CURDATE()
+          AND is_deleted = 0
+    </select>
+
+    <select id="countPendingLeaveByEmployeeId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_leave_application
+        WHERE employee_id = #{employeeId}
+          AND status = 0
+          AND is_deleted = 0
+    </select>
+
+    <select id="countPendingOutByEmployeeId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_out_application
+        WHERE employee_id = #{employeeId}
+          AND status = 0
+          AND is_deleted = 0
+    </select>
+
+    <select id="countIncompleteAttendanceByEmployeeId" resultType="java.lang.Long">
+        SELECT IF(
+            COUNT(1) = 0
+            OR SUM(CASE WHEN check_in_time IS NULL OR check_out_time IS NULL THEN 1 ELSE 0 END) &gt; 0,
+            1,
+            0
+        )
+        FROM t_attendance_record
+        WHERE employee_id = #{employeeId}
+          AND attendance_date = CURDATE()
+          AND is_deleted = 0
+    </select>
+
+    <select id="countOverduePersonalPlansByEmployeeId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_plan
+        WHERE employee_id = #{employeeId}
+          AND plan_type = 3
+          AND status IN (0, 1, 3)
+          AND end_date IS NOT NULL
+          AND end_date &lt; CURDATE()
+          AND is_deleted = 0
+    </select>
+
+    <select id="countInProgressPersonalPlansByEmployeeId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_plan
+        WHERE employee_id = #{employeeId}
+          AND plan_type = 3
+          AND status = 1
+          AND is_deleted = 0
+    </select>
+
+    <select id="countUpcomingBookingsByUserId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_meeting_booking
+        WHERE booker_id = #{userId}
+          AND status IN (0, 1)
+          AND start_time &gt;= NOW()
+          AND is_deleted = 0
+    </select>
+
+    <select id="selectAttendanceTrend" resultType="com.company.enterprise.vo.DashboardTrendPointVO">
+        SELECT
+            DATE_FORMAT(attendance_date, '%Y-%m-%d') AS date,
+            DATE_FORMAT(attendance_date, '%m-%d') AS label,
+            COUNT(1) AS value
+        FROM t_attendance_record
+        WHERE is_deleted = 0
+          AND attendance_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY attendance_date
+        ORDER BY attendance_date ASC
+    </select>
+
+    <select id="selectDepartmentEmployeePie" resultType="com.company.enterprise.vo.DashboardPieItemVO">
+        SELECT
+            d.dept_name AS name,
+            COUNT(e.id) AS value
+        FROM t_department d
+        LEFT JOIN t_employee e
+            ON e.dept_id = d.id
+           AND e.is_deleted = 0
+        WHERE d.is_deleted = 0
+          AND d.status = 1
+        GROUP BY d.id, d.dept_name, d.sort_order
+        HAVING COUNT(e.id) > 0
+        ORDER BY d.sort_order ASC, d.id ASC
+    </select>
+</mapper>

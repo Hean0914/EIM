@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.ApprovalRecordMapper">
+
+    <resultMap id="ApprovalRecordResultMap" type="com.company.enterprise.entity.ApprovalRecord">
+        <id column="id" property="id"/>
+        <result column="business_type" property="businessType"/>
+        <result column="business_id" property="businessId"/>
+        <result column="approver_id" property="approverId"/>
+        <result column="approval_result" property="approvalResult"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="approval_time" property="approvalTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <insert id="insertApprovalRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_approval_record (
+            business_type, business_id, approver_id, approval_result, approval_comment, approval_time,
+            create_time, update_time, is_deleted
+        ) VALUES (
+            #{businessType}, #{businessId}, #{approverId}, #{approvalResult}, #{approvalComment}, #{approvalTime},
+            NOW(), NOW(), 0
+        )
+    </insert>
+
+    <select id="selectByBusiness" resultMap="ApprovalRecordResultMap">
+        SELECT id, business_type, business_id, approver_id, approval_result, approval_comment,
+               approval_time, create_time, update_time, is_deleted
+        FROM t_approval_record
+        WHERE business_type = #{businessType}
+          AND business_id = #{businessId}
+          AND is_deleted = 0
+        ORDER BY approval_time DESC, id DESC
+    </select>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.DepartmentMapper">
+
+    <resultMap id="DepartmentResultMap" type="com.company.enterprise.entity.Department">
+        <id column="id" property="id"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="dept_code" property="deptCode"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="leader_id" property="leaderId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id, parent_id, dept_code, dept_name, leader_id, sort_order, status, remark,
+        create_time, update_time, is_deleted
+    </sql>
+
+    <select id="selectDepartmentList" resultMap="DepartmentResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_department
+        WHERE is_deleted = 0
+        <if test="query != null and query.deptName != null and query.deptName != ''">
+            AND dept_name LIKE CONCAT('%', #{query.deptName}, '%')
+        </if>
+        <if test="query != null and query.status != null">
+            AND status = #{query.status}
+        </if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectDepartmentById" resultMap="DepartmentResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM t_department
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </select>
+
+    <select id="countByDeptCode" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_department
+        WHERE dept_code = #{deptCode}
+          AND is_deleted = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="countChildren" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_department
+        WHERE parent_id = #{parentId}
+          AND is_deleted = 0
+    </select>
+
+    <select id="countEmployeeByDeptId" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_employee
+        WHERE dept_id = #{deptId}
+          AND is_deleted = 0
+    </select>
+
+    <insert id="insertDepartment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_department (
+            parent_id, dept_code, dept_name, leader_id, sort_order, status, remark,
+            create_time, update_time, is_deleted
+        ) VALUES (
+            #{parentId}, #{deptCode}, #{deptName}, #{leaderId}, #{sortOrder}, #{status}, #{remark},
+            NOW(), NOW(), 0
+        )
+    </insert>
+
+    <update id="updateDepartment">
+        UPDATE t_department
+        SET parent_id = #{parentId},
+            dept_code = #{deptCode},
+            dept_name = #{deptName},
+            leader_id = #{leaderId},
+            sort_order = #{sortOrder},
+            status = #{status},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <update id="logicDeleteDepartmentById">
+        UPDATE t_department
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+</mapper>

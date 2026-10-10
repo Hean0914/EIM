@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.AttendanceRuleMapper">
+
+    <resultMap id="AttendanceRuleResultMap" type="com.company.enterprise.entity.AttendanceRule">
+        <id column="id" property="id"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="work_start_time" property="workStartTime"/>
+        <result column="work_end_time" property="workEndTime"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectCurrentRule" resultMap="AttendanceRuleResultMap">
+        SELECT id, rule_name, work_start_time, work_end_time, status, remark,
+               create_time, update_time, is_deleted
+        FROM t_attendance_rule
+        WHERE status = 1
+          AND is_deleted = 0
+        ORDER BY id ASC
+        LIMIT 1
+    </select>
+
+    <update id="updateRule">
+        UPDATE t_attendance_rule
+        SET work_start_time = #{workStartTime},
+            work_end_time = #{workEndTime},
+            remark = #{remark},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND status = 1
+          AND is_deleted = 0
+    </update>
+</mapper>

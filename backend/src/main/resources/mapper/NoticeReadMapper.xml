@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.enterprise.mapper.NoticeReadMapper">
+
+    <select id="countByNoticeAndUser" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_notice_read
+        WHERE notice_id = #{noticeId}
+          AND user_id = #{userId}
+          AND is_deleted = 0
+    </select>
+
+    <select id="selectReadNoticeIds" resultType="java.lang.Long">
+        SELECT notice_id
+        FROM t_notice_read
+        WHERE user_id = #{userId}
+          AND is_deleted = 0
+          AND notice_id IN
+        <foreach collection="noticeIds" item="noticeId" open="(" separator="," close=")">
+            #{noticeId}
+        </foreach>
+    </select>
+
+    <insert id="insertNoticeRead" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_notice_read (
+            notice_id, user_id, read_time, create_time, update_time, is_deleted
+        ) VALUES (
+            #{noticeId}, #{userId}, #{readTime}, NOW(), NOW(), 0
+        )
+    </insert>
+</mapper>
